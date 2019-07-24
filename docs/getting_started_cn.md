@@ -10,16 +10,16 @@
 
 *2. For Windows*
 
-* [Install the Bluefruit52 board for Arduino](https://github.com/Afantor/Afantor_Bluefruit52_Arduino/tree/master/docs/getting_started_setting.md) 
+* [Install the Bluefruit52 board for Arduino](https://github.com/Afantor/Bluefruit52_Arduino/tree/master/docs/getting_started_setting.md) 
 
 
 ## 2. 例程
 
-https://github.com/Afantor/Afantor_Bluefruit52_Arduino/tree/master/examples
+https://github.com/Afantor/Bluefruit52_Arduino/tree/master/examples
 
 ## 3. API 参考
 
-https://github.com/Afantor/Afantor_Bluefruit52_Arduino/blob/master/src/bluefruit52.h#L49
+https://github.com/Afantor/Bluefruit52_Arduino/blob/master/src/bluefruit52.h#L49
 
 https://www.afantor.cc/nRF52_bluefruit_Learning_Guide.html
 
@@ -27,7 +27,7 @@ https://www.afantor.cc/nRF52_bluefruit_Learning_Guide.html
 
 #### 管脚映射
 
-*我们有几个不同版本的主控，可以直接查看原理图[对比](https://github.com/Afantor/Afantor_Bluefruit52_Arduino/tree/master/docs/hardware).*
+*我们有几个不同版本的主控，可以直接查看原理图[对比](https://github.com/Afantor/Bluefruit52_Arduino/tree/master/docs/hardware).*
 
 **LCD & TF Card**
 
@@ -46,11 +46,11 @@ https://www.afantor.cc/nRF52_bluefruit_Learning_Guide.html
  <tr><td>Button Pin</td><td>BUTTON 1</td><td>BUTTON 2</td></tr>
 </table>
 
-**MPU6050**
+**BMI160 6 axis**
 
 <table>
- <tr><td>nRF52 Chip</td><td>P0.26</td><td>P0.25</td></tr>
- <tr><td>MPU6050</td><td>SCL</td><td>SDA</td></tr>
+ <tr><td>nRF52 Chip</td><td>P0.26</td><td>P0.25</td><td>P0.30(A6)</td></tr>
+ <tr><td>BMI160</td><td>SCL</td><td>SDA</td><td>INT1</td></tr>
 </table>
 
 
@@ -64,6 +64,6 @@ https://www.afantor.cc/nRF52_bluefruit_Learning_Guide.html
 
   https://docs.m5stack.com/#/zh_CN/related_documents/establish_serial_connection
 
-* 如何升级 Adafruit_nRF52_Arduino 库和 Afantor_Bluefruit52_Arduino 库
+* 如何升级 Adafruit_nRF52_Arduino 库和 Bluefruit52_Arduino 库
 
   https://docs.m5stack.com/#/zh_CN/related_documents/upgrade_m5stack_lib

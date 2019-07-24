@@ -38,7 +38,7 @@ https://www.arduino.cc/en/Main/Software
 ![image](arduino-ide/win-screenshots_cn/arduino_path.png)
 
 
-### 2、下载 Afantor nRF52832 支持包
+### 2、下载 Afantor nRF52832 Bluefruit52支持包
 
 （我的 Arduino 当前路径是 D:\Program Files\arduino）
 
@@ -65,7 +65,7 @@ https://www.arduino.cc/en/Main/Software
 安装完成后，打开“工具”菜单下，选择“开发板”，找到“Adafruit nRF52832 Boards” 下的 “Adafruit Bluefruit nRF52832 Feather”，环境即搭建完成。
 
 
-### 4、打开Arduino IDE 验证Adafruit_nRF52_Arduino和Afantor_Bluefruit52_Arduino 的库
+### 4、打开Arduino IDE 验证Adafruit_nRF52_Arduino和Bluefruit52_Arduino 的库
 
 打开Arduino IDE，选择“Adafruit Bluefruit nRF52832 Feather”开发板，进入“文件”菜单下的“示例”，找到“Adafruit Bluefruit nRF52 Libraries” 和 “Afantor Bluefruit52” 里面即是例程库。
 

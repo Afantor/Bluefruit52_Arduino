@@ -16,22 +16,22 @@ Welcome to program with Bluefruit52 nRF52832 Core
 
 *2. For Windows*
 
-* [Install the Bluefruit52 board for Arduino](https://github.com/Afantor/Afantor_Bluefruit52_Arduino/tree/master/docs/getting_started_setting.md) 
+* [Install the Bluefruit52 board for Arduino](https://github.com/Afantor/Bluefruit52_Arduino/tree/master/docs/getting_started_setting.md) 
 
 
 ## 2. Example
 
-https://github.com/Afantor/Afantor_Bluefruit52_Arduino/tree/master/examples
+https://github.com/Afantor/Bluefruit52_Arduino/tree/master/examples
 
 ## 3. API Reference
 
-https://github.com/Afantor/Afantor_Bluefruit52_Arduino/blob/master/src/bluefruit52.h#L49
+https://github.com/Afantor/Bluefruit52_Arduino/blob/master/src/bluefruit52.h#L49
 
 ## 4. H/W Reference
 
 #### Pinout
 
-*We have several kinds of Boards, There is [their difference in schematic](https://github.com/Afantor/Afantor_Bluefruit52_Arduino/tree/master/docs/hardware).*
+*We have several kinds of Boards, There is [their difference in schematic](https://github.com/Afantor/Bluefruit52_Arduino/tree/master/docs/hardware).*
 
 **LCD**
 
@@ -50,11 +50,11 @@ https://github.com/Afantor/Afantor_Bluefruit52_Arduino/blob/master/src/bluefruit
  <tr><td>Button Pin</td><td>BUTTON 1</td><td>BUTTON 2</td></tr>
 </table>
 
-**MPU6050**
+**BMI160 6 axis**
 
 <table>
- <tr><td>nRF52 Chip</td><td>P0.26</td><td>P0.25</td></tr>
- <tr><td>MPU6050</td><td>SCL</td><td>SDA</td></tr>
+ <tr><td>nRF52 Chip</td><td>P0.26</td><td>P0.25</td><td>P0.30(A6)</td></tr>
+ <tr><td>BMI160</td><td>SCL</td><td>SDA</td><td>INT1</td></tr>
 </table>
 
 
@@ -64,4 +64,4 @@ https://github.com/Afantor/Afantor_Bluefruit52_Arduino/blob/master/src/bluefruit
 
 ## 5. Awesome Project
 
-* [App-Controller](https://github.com/Afantor/Afantor_Bluefruit52_Arduino/tree/master/examples/Peripheral/controller)  This examples shows you you can use the BLEUart helper class and the Bluefruit LE Connect applications to send based keypad and sensor data to your nRF52.
+* [App-Controller](https://github.com/Afantor/Bluefruit52_Arduino/tree/master/examples/Peripheral/controller)  This examples shows you you can use the BLEUart helper class and the Bluefruit LE Connect applications to send based keypad and sensor data to your nRF52.

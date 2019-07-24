@@ -21,17 +21,17 @@ Coming soon...
 
 ## 2. プログラム例
 
-https://github.com/Afantor/Afantor_Bluefruit52_Arduino/tree/master/examples
+https://github.com/Afantor/Bluefruit52_Arduino/tree/master/examples
 
 ## 3. 関数リファレンス（API仕様）
 
-https://github.com/Afantor/Afantor_Bluefruit52_Arduino/blob/master/src/bluefruit52.h#L49
+https://github.com/Afantor/Bluefruit52_Arduino/blob/master/src/bluefruit52.h#L49
 
 ## 4. ハードウェア仕様
 
 #### I/Oインタフェイス 
 
-*nRF52は複数のバリエーションがあります。違いは [こちら](https://github.com/Afantor/Afantor_Bluefruit52_Arduino/tree/master/docs/hardware)*
+*nRF52は複数のバリエーションがあります。違いは [こちら](https://github.com/Afantor/Bluefruit52_Arduino/tree/master/docs/hardware)*
 
 **LCD**
 
@@ -50,11 +50,11 @@ https://github.com/Afantor/Afantor_Bluefruit52_Arduino/blob/master/src/bluefruit
  <tr><td>Button Pin</td><td>BUTTON 1</td><td>BUTTON 2</td></tr>
 </table>
 
-**MPU6050**
+**BMI160 6 axis**
 
 <table>
- <tr><td>nRF52 Chip</td><td>P0.26</td><td>P0.25</td></tr>
- <tr><td>MPU6050</td><td>SCL</td><td>SDA</td></tr>
+ <tr><td>nRF52 Chip</td><td>P0.26</td><td>P0.25</td><td>P0.30(A6)</td></tr>
+ <tr><td>BMI160</td><td>SCL</td><td>SDA</td><td>INT1</td></tr>
 </table>
 
 
@@ -64,4 +64,4 @@ https://github.com/Afantor/Afantor_Bluefruit52_Arduino/blob/master/src/bluefruit
 
 ## 5. 素晴らしい応用例
 
-* [App-Controller](https://github.com/Afantor/Afantor_Bluefruit52_Arduino/tree/master/examples/Peripheral/controller)  この例は、BLEUartヘルパークラスとBluefruit LE Connectアプリケーションを使用して、ベースのキーパッドとセンサーデータをnRF52に送信できることを示しています。
+* [App-Controller](https://github.com/Afantor/Bluefruit52_Arduino/tree/master/examples/Peripheral/controller)  この例は、BLEUartヘルパークラスとBluefruit LE Connectアプリケーションを使用して、ベースのキーパッドとセンサーデータをnRF52に送信できることを示しています。
