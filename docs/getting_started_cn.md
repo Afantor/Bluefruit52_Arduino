@@ -1,14 +1,8 @@
-# nRF52832 Bluefruit Arduino Libraries
+﻿# nRF52832 Bluefruit 库
 
- These's examples for our nRF52832 based Bluefruit LE modules
+[English](../README.md) | 中文 | [日本語](docs/getting_started_ja.md)
 
-English | [中文](docs/getting_started_cn.md) | [日本語](docs/getting_started_ja.md)
-
-Welcome to program with Bluefruit52 nRF52832 Core
-
-## 1. Get Started
-
-#### Here is the article to get started
+## 1. 上手指南
 
 *1.For MacOS*
 
@@ -19,23 +13,25 @@ Welcome to program with Bluefruit52 nRF52832 Core
 * [Install the Bluefruit52 board for Arduino](https://github.com/Afantor/Afantor_Bluefruit52_Arduino/tree/master/docs/getting_started_setting.md) 
 
 
-## 2. Example
+## 2. 例程
 
 https://github.com/Afantor/Afantor_Bluefruit52_Arduino/tree/master/examples
 
-## 3. API Reference
+## 3. API 参考
 
 https://github.com/Afantor/Afantor_Bluefruit52_Arduino/blob/master/src/bluefruit52.h#L49
 
-## 4. H/W Reference
+https://www.afantor.cc/nRF52_bluefruit_Learning_Guide.html
 
-#### Pinout
+## 4. H/W 参考
 
-*We have several kinds of Boards, There is [their difference in schematic](https://github.com/Afantor/Afantor_Bluefruit52_Arduino/tree/master/docs/hardware).*
+#### 管脚映射
 
-**LCD**
+*我们有几个不同版本的主控，可以直接查看原理图[对比](https://github.com/Afantor/Afantor_Bluefruit52_Arduino/tree/master/docs/hardware).*
 
-*LCD Resolution: 135x240*
+**LCD & TF Card**
+
+*LCD 分辨率: 135x240*
 
 <table>
  <tr><td>nRF52 Chip</td><td>P0.07</td><td>P0.27</td><td>P0.16</td><td>P0.23</td><td>P0.24</td><td>~CS</td></tr>
@@ -59,9 +55,15 @@ https://github.com/Afantor/Afantor_Bluefruit52_Arduino/blob/master/src/bluefruit
 
 
 ### M-BUS
-![image](docs/images/Bluefruit52_Pinconfig.png)
-![image](docs/images/Bluefruit52_Pinout.png)
+![image](images/Bluefruit52_Pinconfig.png)
+![image](images/Bluefruit52_Pinout.png)
 
-## 5. Awesome Project
+#### Note:
 
-* [App-Controller](https://github.com/Afantor/Afantor_Bluefruit52_Arduino/tree/master/examples/Peripheral/controller)  This examples shows you you can use the BLEUart helper class and the Bluefruit LE Connect applications to send based keypad and sensor data to your nRF52.
+* 如何安装 CP210x 串口驱动
+
+  https://docs.m5stack.com/#/zh_CN/related_documents/establish_serial_connection
+
+* 如何升级 Adafruit_nRF52_Arduino 库和 Afantor_Bluefruit52_Arduino 库
+
+  https://docs.m5stack.com/#/zh_CN/related_documents/upgrade_m5stack_lib
