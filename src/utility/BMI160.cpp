@@ -113,7 +113,7 @@ void BMI160Class::initialize()
                                 BMI160_GYR_PMU_STATUS_LEN))
         delay(1);
 
-    setFullScaleGyroRange(BMI160_GYRO_RANGE_250);
+    setFullScaleGyroRange(BMI160_GYRO_RANGE_2000);
     setFullScaleAccelRange(BMI160_ACCEL_RANGE_2G);
 
     /* Only PIN1 interrupts currently supported - map all interrupts to PIN1 */

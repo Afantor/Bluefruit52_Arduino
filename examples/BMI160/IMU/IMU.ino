@@ -18,7 +18,11 @@
  */
 #include <bluefruit52.h>
 
-#define BMI160_ADDRESS 0x69  // Device address when ADO = 1
+const int irq_pin = 30;
+const int i2c_addr = 0x69;
+
+#define BMI160_ADDRESS        0x69  // Device address when ADO = 1
+#define BMI160_STATUS         0x1B
 
 #define SerialDebug true  // set to true to get Serial output for debugging
 
@@ -86,12 +90,10 @@ float aRes, gRes;      // scale resolutions per LSB for the sensors
 int myLed     = 19;  // LED on the Bluefruit52
 
 // BMI160 variables
-int16_t accelCount[3];  // Stores the 16-bit signed accelerometer sensor output
-int16_t gyroCount[3];   // Stores the 16-bit signed gyro sensor output
-int16_t magCount[3];    // Stores the 16-bit signed magnetometer sensor output
+int accelx,accely,accelz;  // Stores the 16-bit signed accelerometer sensor output
+int gyrox,gyroy,gyroz;   // Stores the 16-bit signed gyro sensor output
 float Quat[4] = {0, 0, 0, 0}; // quaternion data register
-float magCalibration[3] = {0, 0, 0};  // Factory mag calibration and mag bias
-float gyroBias[3] = {0, 0, 0}, accelBias[3] = {0, 0, 0}, magBias[3] = {0, 0, 0};  // Bias corrections for gyro, accelerometer, mag
+float gyroBias[3] = {0, 0, 0}, accelBias[3] = {0, 0, 0};  // Bias corrections for gyro, accelerometer, mag
 int16_t tempCount;            // temperature raw count output
 float   temperature;          // Stores the BMX055 internal chip temperature in degrees Celsius
 float SelfTest[6];            // holds results of gyro and accelerometer self test
@@ -125,6 +127,8 @@ float eInt[3] = {0.0f, 0.0f, 0.0f};       // vector to hold integral error for M
 
 bool passThru = true;
 
+int calibrateOffsets = 1; // int to determine whether calibration takes place or not
+
 void setup()
 {
   // Setup for Master mode, pins 18/19, external pullups, 400kHz for Teensy 3.1
@@ -150,40 +154,16 @@ void setup()
   {  
     Serial.println("BMI160 are online...");
   
-    delay(1000); 
-     
+    delay(100); 
     // get sensor resolutions, only need to do this once
     getAres();
     getGres();
-    
-    Serial.println(" Calibrate gyro and accel");
-    accelgyrofastcalBMI160(accelBias, gyroBias); // Calibrate gyro and accelerometers, load biases in bias registers
-    Serial.println("accel biases (mg)"); Serial.println(3.9*accelBias[0]); Serial.println(3.9*accelBias[1]); Serial.println(3.9*accelBias[2]);
-    Serial.println("gyro biases (dps)"); Serial.println(0.061*gyroBias[0]); Serial.println(0.061*gyroBias[1]); Serial.println(0.061*gyroBias[2]);
-    delay(1000);
-
-    initBMI160(); 
-    Serial.println("BMI160 initialized for active data mode...."); // Initialize device for active mode read of acclerometer, gyroscope, and temperature
-
-    // Check power status of BMI160
-    uint8_t pwr_status = readByte(BMI160_ADDRESS, BMI160_PMU_STATUS);
-    uint8_t acc_pwr = (pwr_status & 0x30) >> 4;
-    if (acc_pwr == 0x00) Serial.println("Accel Suspend Mode");
-    if (acc_pwr == 0x01) Serial.println("Accel Normal Mode");
-    if (acc_pwr == 0x02) Serial.println("Accel Low Power Mode");
-    uint8_t gyr_pwr = (pwr_status & 0x0C) >> 2;
-    if (gyr_pwr == 0x00) Serial.println("Gyro Suspend Mode");
-    if (gyr_pwr == 0x01) Serial.println("Gyro Normal Mode");
-    if (gyr_pwr == 0x03) Serial.println("Gyro Fast Start Up Mode");
-     delay(1000);
-
-    
-    BMI160SelfTest(SelfTest); // Start by performing self test and reporting values
-    Serial.println("result of self test should be at least 2 g!");
-    Serial.print("x-axis self test: acceleration delta is : "); Serial.print(SelfTest[0],1); Serial.println(" g");
-    Serial.print("y-axis self test: acceleration delta is : "); Serial.print(SelfTest[1],1); Serial.println(" g");
-    Serial.print("z-axis self test: acceleration delta is : "); Serial.print(SelfTest[2],1); Serial.println(" g");
-    delay(1000);
+    // Set the gyro range to 2000 degrees/second
+    BMI160.setGyroRate(3200);
+    BMI160.setGyroRange(2000);
+     // Set the accelerometer range to 2g
+    BMI160.setAccelerometerRate(1600);
+    BMI160.setAccelerometerRange(2);
   }
   else
   {
@@ -191,23 +171,88 @@ void setup()
     Serial.println(dev_id, HEX);
     while(1) ; // Loop forever if communication doesn't happen
   }
+  // use the code below to calibrate accel/gyro offset values
+  if (calibrateOffsets == 1) {
+    Serial.println("Internal sensor offsets BEFORE calibration...");
+    Serial.print(BMI160.getAccelerometerOffset(X_AXIS));
+    Serial.print("\t"); // -76
+    Serial.print(BMI160.getAccelerometerOffset(Y_AXIS));
+    Serial.print("\t"); // -235
+    Serial.print(BMI160.getAccelerometerOffset(Z_AXIS));
+    Serial.print("\t"); // 168
+    Serial.print(BMI160.getGyroOffset(X_AXIS));
+    Serial.print("\t"); // 0
+    Serial.print(BMI160.getGyroOffset(Y_AXIS));
+    Serial.print("\t"); // 0
+    Serial.println(BMI160.getGyroOffset(Z_AXIS));
+
+    // To manually configure offset compensation values,
+    // use the following methods instead of the autoCalibrate...() methods below
+    //BMI160.setAccelerometerOffset(X_AXIS,495.3);
+    //BMI160.setAccelerometerOffset(Y_AXIS,-15.6);
+    //BMI160.setAccelerometerOffset(Z_AXIS,491.4);
+    //BMI160.setGyroOffset(X_AXIS,7.869);
+    //BMI160.setGyroOffset(Y_AXIS,-0.061);
+    //BMI160.setGyroOffset(Z_AXIS,15.494);
+
+    Serial.println("About to calibrate. Make sure your board is stable and upright");
+    delay(5000);
+
+    // The board must be resting in a horizontal position for
+    // the following calibration procedure to work correctly!
+    Serial.print("Starting Gyroscope calibration and enabling offset compensation...");
+    BMI160.autoCalibrateGyroOffset();
+    Serial.println(" Done");
+
+    Serial.print("Starting Acceleration calibration and enabling offset compensation...");
+    BMI160.autoCalibrateAccelerometerOffset(X_AXIS, 0);
+    BMI160.autoCalibrateAccelerometerOffset(Y_AXIS, 0);
+    BMI160.autoCalibrateAccelerometerOffset(Z_AXIS, 1);
+    Serial.println(" Done");
+
+    Serial.println("Internal sensor offsets AFTER calibration...");
+    Serial.print(BMI160.getAccelerometerOffset(X_AXIS));
+    Serial.print("\t"); // -76
+    Serial.print(BMI160.getAccelerometerOffset(Y_AXIS));
+    Serial.print("\t"); // -2359
+    Serial.print(BMI160.getAccelerometerOffset(Z_AXIS));
+    Serial.print("\t"); // 1688
+    Serial.print(BMI160.getGyroOffset(X_AXIS));
+    Serial.print("\t"); // 0
+    Serial.print(BMI160.getGyroOffset(Y_AXIS));
+    Serial.print("\t"); // 0
+    Serial.println(BMI160.getGyroOffset(Z_AXIS));
+  }
 }
 
 
 void loop()
 {  
   if (readByte(BMI160_ADDRESS, BMI160_STATUS) & 0x40) {  // check if new gyro data
-    readAccelGyroData(gyroCount, accelCount);  // Read the x/y/z adc values
+    // read raw accel/gyro measurements from device
+    BMI160.readMotionSensor(accelx,accely,accelz, gyrox,gyroy,gyroz);
+  
+    // these methods (and a few others) are also available
+  
+    //BMI160.readAcceleration(ax, ay, az);
+    //BMI160.readRotation(gx, gy, gz);
+  
+    //ax = BMI160.readAccelerometer(X_AXIS);
+    //ay = BMI160.readAccelerometer(Y_AXIS);
+    //az = BMI160.readAccelerometer(Z_AXIS);
+    //gx = BMI160.readGyro(X_AXIS);
+    //gy = BMI160.readGyro(Y_AXIS);
+    //gz = BMI160.readGyro(Z_AXIS);
 
     // Now we'll calculate the accleration value into actual g's
-    ax = (float)accelCount[0]*aRes;  // get actual g value, this depends on scale being set
-    ay = (float)accelCount[1]*aRes;  
-    az = (float)accelCount[2]*aRes;  
+    ax = (float)accelx*aRes;  // get actual g value, this depends on scale being set
+    ay = (float)accely*aRes;  
+    az = (float)accelz*aRes;  
 
     // Calculate the gyro value into actual degrees per second
-    gx = (float)gyroCount[0]*gRes;  // get actual gyro value, this depends on scale being set
-    gy = (float)gyroCount[1]*gRes;  
-    gz = (float)gyroCount[2]*gRes;   
+    gx = (float)gyrox*gRes;  // get actual gyro value, this depends on scale being set
+    gy = (float)gyroy*gRes;  
+    gz = (float)gyroz*gRes;   
   }
 
 
@@ -269,6 +314,9 @@ void loop()
     pitch *= 180.0f / PI;
     yaw   *= 180.0f / PI; 
     roll  *= 180.0f / PI;
+    if(yaw < 0) yaw   += 360.0f ; // Ensure yaw stays between 0 and 360
+    yaw   += 0.02f; // Declination at Danville, California is 13 degrees 48 minutes and 47 seconds on 2014-04-04
+    
     //Hardware AHRS:
     // Yaw   = atan2(2.0f * (Quat[0] * Quat[1] + Quat[3] * Quat[2]), Quat[3] * Quat[3] + Quat[0] * Quat[0] - Quat[1] * Quat[1] - Quat[2] * Quat[2]);   
     // Pitch = -asin(2.0f * (Quat[0] * Quat[2] - Quat[3] * Quat[1]));
@@ -286,7 +334,7 @@ void loop()
     //
     
     if(SerialDebug) {
-      Serial.print("Software Yaw, Pitch, Roll: ");
+      // Serial.print("Software Yaw, Pitch, Roll: ");
       Serial.print(yaw, 2);
       Serial.print(", ");
       Serial.print(pitch, 2);
@@ -303,99 +351,7 @@ void loop()
     }
 
 }
-// Implementation of Sebastian Madgwick's "...efficient orientation filter for... inertial/magnetic sensor arrays"
-// (see http://www.x-io.co.uk/category/open-source/ for examples and more details)
-// which fuses acceleration and rotation rate to produce a quaternion-based estimate of relative
-// device orientation -- which can be converted to yaw, pitch, and roll. Useful for stabilizing quadcopters, etc.
-// The performance of the orientation filter is at least as good as conventional Kalman-based filtering algorithms
-// but is much less computationally intensive---it can be performed on a 3.3 V Pro Mini operating at 8 MHz!
-void MadgwickQuaternionUpdate(float ax, float ay, float az, float gx, float gy, float gz, float deltat)
-{
-    float q1 = q[0], q2 = q[1], q3 = q[2], q4 = q[3];         // short name local variable for readability
-    float norm;                                               // vector norm
-    float f1, f2, f3;                                         // objetive funcyion elements
-    float J_11or24, J_12or23, J_13or22, J_14or21, J_32, J_33; // objective function Jacobian elements
-    float qDot1, qDot2, qDot3, qDot4;
-    float hatDot1, hatDot2, hatDot3, hatDot4;
-    float gerrx, gerry, gerrz, gbiasx, gbiasy, gbiasz;        // gyro bias error
 
-    // Auxiliary variables to avoid repeated arithmetic
-    float _halfq1 = 0.5f * q1;
-    float _halfq2 = 0.5f * q2;
-    float _halfq3 = 0.5f * q3;
-    float _halfq4 = 0.5f * q4;
-    float _2q1 = 2.0f * q1;
-    float _2q2 = 2.0f * q2;
-    float _2q3 = 2.0f * q3;
-    float _2q4 = 2.0f * q4;
-    float _2q1q3 = 2.0f * q1 * q3;
-    float _2q3q4 = 2.0f * q3 * q4;
-
-    // Normalise accelerometer measurement
-    norm = sqrt(ax * ax + ay * ay + az * az);
-    if (norm == 0.0f) return; // handle NaN
-    norm = 1.0f/norm;
-    ax *= norm;
-    ay *= norm;
-    az *= norm;
-            
-    // Compute the objective function and Jacobian
-    f1 = _2q2 * q4 - _2q1 * q3 - ax;
-    f2 = _2q1 * q2 + _2q3 * q4 - ay;
-    f3 = 1.0f - _2q2 * q2 - _2q3 * q3 - az;
-    J_11or24 = _2q3;
-    J_12or23 = _2q4;
-    J_13or22 = _2q1;
-    J_14or21 = _2q2;
-    J_32 = 2.0f * J_14or21;
-    J_33 = 2.0f * J_11or24;
-          
-    // Compute the gradient (matrix multiplication)
-    hatDot1 = J_14or21 * f2 - J_11or24 * f1;
-    hatDot2 = J_12or23 * f1 + J_13or22 * f2 - J_32 * f3;
-    hatDot3 = J_12or23 * f2 - J_33 *f3 - J_13or22 * f1;
-    hatDot4 = J_14or21 * f1 + J_11or24 * f2;
-            
-    // Normalize the gradient
-    norm = sqrt(hatDot1 * hatDot1 + hatDot2 * hatDot2 + hatDot3 * hatDot3 + hatDot4 * hatDot4);
-    hatDot1 /= norm;
-    hatDot2 /= norm;
-    hatDot3 /= norm;
-    hatDot4 /= norm;
-            
-    // Compute estimated gyroscope biases
-    gerrx = _2q1 * hatDot2 - _2q2 * hatDot1 - _2q3 * hatDot4 + _2q4 * hatDot3;
-    gerry = _2q1 * hatDot3 + _2q2 * hatDot4 - _2q3 * hatDot1 - _2q4 * hatDot2;
-    gerrz = _2q1 * hatDot4 - _2q2 * hatDot3 + _2q3 * hatDot2 - _2q4 * hatDot1;
-            
-    // Compute and remove gyroscope biases
-    gbiasx += gerrx * deltat * zeta;
-    gbiasy += gerry * deltat * zeta;
-    gbiasz += gerrz * deltat * zeta;
-    gx -= gbiasx;
-    gy -= gbiasy;
-    gz -= gbiasz;
-            
-    // Compute the quaternion derivative
-    qDot1 = -_halfq2 * gx - _halfq3 * gy - _halfq4 * gz;
-    qDot2 =  _halfq1 * gx + _halfq3 * gz - _halfq4 * gy;
-    qDot3 =  _halfq1 * gy - _halfq2 * gz + _halfq4 * gx;
-    qDot4 =  _halfq1 * gz + _halfq2 * gy - _halfq3 * gx;
-
-    // Compute then integrate estimated quaternion derivative
-    q1 += (qDot1 -(beta * hatDot1)) * deltat;
-    q2 += (qDot2 -(beta * hatDot2)) * deltat;
-    q3 += (qDot3 -(beta * hatDot3)) * deltat;
-    q4 += (qDot4 -(beta * hatDot4)) * deltat;
-
-    // Normalize the quaternion
-    norm = sqrt(q1 * q1 + q2 * q2 + q3 * q3 + q4 * q4);    // normalise quaternion
-    norm = 1.0f/norm;
-    q[0] = q1 * norm;
-    q[1] = q2 * norm;
-    q[2] = q3 * norm;
-    q[3] = q4 * norm;
-}
 
 //===================================================================================================================
 //====== Set of useful function to access acceleration. gyroscope, magnetometer, and temperature data
@@ -471,135 +427,6 @@ void getAres() {
           aRes = 16.0/32768.0;
           break;
   }
-}
-
-
-void readAccelGyroData(int16_t * dest1, int16_t * dest2)
-{
-  uint8_t rawData[12];  // x/y/z accel register data stored here
-  readBytes(BMI160_ADDRESS, BMI160_GYRO_DATA, 12, &rawData[0]);  // Read the twelve raw data registers into data array
-  dest1[0] = ((int16_t)rawData[1] << 8) | rawData[0] ;  // Turn gyro MSB and LSB into a signed 16-bit value
-  dest1[1] = ((int16_t)rawData[3] << 8) | rawData[2] ;  
-  dest1[2] = ((int16_t)rawData[5] << 8) | rawData[4] ; 
-
-  dest2[0] = ((int16_t)rawData[7] << 8) | rawData[6] ;  // Turn accel MSB and LSB into a signed 16-bit value
-  dest2[1] = ((int16_t)rawData[9] << 8) | rawData[8] ;  
-  dest2[2] = ((int16_t)rawData[11] << 8) | rawData[10] ; 
-}
-
-int16_t readTempData()
-{
-  uint8_t rawData[2];  // x/y/z gyro register data stored here
-  readBytes(BMI160_ADDRESS, BMI160_TEMPERATURE, 2, &rawData[0]);  // Read the two raw data registers sequentially into data array 
-  return ((int16_t)rawData[1] << 8) | rawData[0] ;  // Turn the MSB and LSB into a 16-bit value
-}
-
-void initBMI160()
-{  
- // configure accel and gyro
-  writeByte(BMI160_ADDRESS, BMI160_CMD, 0x11); // Set accel in normal mode operation
-  delay(50); // Wait for accel to reset 
-  writeByte(BMI160_ADDRESS, BMI160_CMD, 0x15); // Set gyro in normal mode operation
-  delay(100); // Wait for gyro to reset 
- // Define accel full scale and sample rate
-  writeByte(BMI160_ADDRESS, BMI160_ACC_RANGE, Ascale);
-  writeByte(BMI160_ADDRESS, BMI160_ACC_CONF, ABW << 4 | AODR);
- // Define gyro full scale and sample rate
-  writeByte(BMI160_ADDRESS, BMI160_GYR_RANGE, Gscale);
-  writeByte(BMI160_ADDRESS, BMI160_GYR_CONF, GBW << 4 | GODR);
-}
-
-
-void accelgyrofastcalBMI160(float * dest1, float * dest2)
-{
-  uint8_t rawData[7] = {0, 0, 0, 0, 0, 0, 0};
-  
-  writeByte(BMI160_ADDRESS, BMI160_FOC_CONF, 0x4 | 0x30 | 0x0C | 0x01); // Enable gyro cal and accel cal with 0, 0, 1 as reference
-  delay(20);
-  writeByte(BMI160_ADDRESS, BMI160_CMD, 0x03); // start fast calibration
-  delay(50);
-  if(readByte(BMI160_ADDRESS, BMI160_ERR_REG) & 0x40) {  // check if dropped command
-    Serial.println("Dropped fast offset compensation command!");
-    return;
-  }
- 
-  while(!(readByte(BMI160_ADDRESS, BMI160_STATUS) & 0x08)); // wait for fast compensation data ready bit
-  if((readByte(BMI160_ADDRESS, BMI160_STATUS) & 0x08)) {
-   
-    readBytes(BMI160_ADDRESS, BMI160_OFFSET, 7, &rawData[0]);  // Read the seven raw data registers into data array
-    dest1[0] = (float)(((int16_t)(rawData[0] << 8 ) | 0x00) >> 8);  // Turn accel offset into a signed 8-bit value
-    dest1[1] = (float)(((int16_t)(rawData[1] << 8 ) | 0x00) >> 8);  
-    dest1[2] = (float)(((int16_t)(rawData[2] << 8 ) | 0x00) >> 8); 
-
-    dest2[0] = (float)((((int16_t)(rawData[7] & 0x03) << 8) | rawData[3]) >> 6);  // Turn gyro offset MSB and LSB into a signed 10-bit value
-    dest2[1] = (float)((((int16_t)(rawData[7] & 0x0C) << 8) | rawData[4]) >> 6);  
-    dest2[2] = (float)((((int16_t)(rawData[7] & 0x30) << 8) | rawData[5]) >> 6); 
-
-    writeByte(BMI160_ADDRESS, BMI160_OFFSET_CONF, 0x40);  // enable use of offset registers in data output
-  }
-  else {
-    Serial.println("couldn't get offsets!");
-  }
-}
-
-
-void BMI160SelfTest(float * destination)
-{
-  uint8_t rawData[6] = {0, 0, 0, 0, 0, 0};
-  uint16_t selfTestp[3], selfTestm[3];
-     
-// Enable Gyro Self Test
-  writeByte(BMI160_ADDRESS, BMI160_SELF_TEST, 0x10); // Enable Gyro Self Test
-  delay(100);
-  uint8_t result = readByte(BMI160_ADDRESS, BMI160_STATUS);
-  if(result & 0x02) {
-    Serial.println("Gyro Self test passed!");
-  }
-  else {
-     Serial.println("Gyro Self test failed!");  
-  }
-   // disable self test
-  writeByte(BMI160_ADDRESS, BMI160_SELF_TEST, 0x00 ); // disable Self Test  
-  delay(100);
-  
-// Configure for Accel Self test
-   writeByte(BMI160_ADDRESS, BMI160_ACC_RANGE, AFS_8G); // set range to 8 g
-   writeByte(BMI160_ADDRESS, BMI160_ACC_CONF, 0x2C ); // Configure accel for Self Test
-
-// Enable Accel Self Test-positive deflection
-  writeByte(BMI160_ADDRESS, BMI160_SELF_TEST, 0x08 | 0x04 | 0x01 ); // Enable accel Self Test positive
-  delay(100);
-  readBytes(BMI160_ADDRESS, BMI160_ACCEL_DATA, 6, &rawData[0]);  // Read the six raw data registers into data array
-  selfTestp[0] = ((int16_t)rawData[1] << 8) | rawData[0] ;  // Turn accel MSB and LSB into a signed 16-bit value
-  selfTestp[1] = ((int16_t)rawData[3] << 8) | rawData[2] ;  
-  selfTestp[2] = ((int16_t)rawData[5] << 8) | rawData[4] ; 
-
-  // disable self test
-  writeByte(BMI160_ADDRESS, BMI160_SELF_TEST, 0x00 ); // disable Self Test  
-  delay(100);
-
-// Enable Accel Self Test-negative deflection
-  writeByte(BMI160_ADDRESS, BMI160_SELF_TEST, 0x08 | 0x01 ); // Enable accel Self Test negative
-  delay(100);
-  readBytes(BMI160_ADDRESS, BMI160_ACCEL_DATA, 6, &rawData[0]);  // Read the six raw data registers into data array
-  selfTestm[0] = ((int16_t)rawData[1] << 8) | rawData[0] ;  // Turn accel MSB and LSB into a signed 16-bit value
-  selfTestm[1] = ((int16_t)rawData[3] << 8) | rawData[2] ;  
-  selfTestm[2] = ((int16_t)rawData[5] << 8) | rawData[4] ; 
-
-//  Serial.println(selfTestp[0]);Serial.println(selfTestp[1]);Serial.println(selfTestp[2]);
- // Serial.println(selfTestm[0]);Serial.println(selfTestm[1]);Serial.println(selfTestm[2]);
-   
-  destination[0] = (float)(selfTestp[0] - selfTestm[0])*8./32768.; //construct differences between positve and negative defection, should be ~2 g
-  destination[1] = (float)(selfTestp[1] - selfTestm[1])*8./32768.;
-  destination[2] = (float)(selfTestp[2] - selfTestm[2])*8./32768.;
-
- // disable self test
-  writeByte(BMI160_ADDRESS, BMI160_SELF_TEST, 0x00 ); // disable Self Test  
-  delay(100);
-
-  writeByte(BMI160_ADDRESS, BMI160_ACC_RANGE, Ascale); // set range to original value
-  writeByte(BMI160_ADDRESS, BMI160_ACC_CONF, ABW << 4 | AODR); // return accel to original configuration
-// End self tests
 }
 
 // simple function to scan for I2C devices on the bus
