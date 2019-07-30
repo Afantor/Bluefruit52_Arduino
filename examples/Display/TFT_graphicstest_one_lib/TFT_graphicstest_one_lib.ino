@@ -16,9 +16,13 @@
 
 unsigned long total = 0;
 unsigned long tn = 0;
+
 void setup() {
 
   BF52.begin(true, true, false);
+
+  // Get a single ADC sample and throw it away
+  readVBAT();
 
   Serial.println(""); Serial.println("");
   Serial.println("eSPI library test!");
@@ -95,7 +99,76 @@ void setup() {
 }
 
 void loop(void) {
-  for (uint8_t rotation = 0; rotation < 8; rotation++) {
+  tn = micros();
+  BF52.Lcd.fillScreen(BLACK);
+
+  yield(); Serial.println(F("Benchmark                Time (microseconds)"));
+
+  yield(); Serial.print(F("Screen fill              "));
+  yield(); Serial.println(testFillScreen());
+  //total+=testFillScreen();
+  delay(500);
+
+  yield(); Serial.print(F("Text                     "));
+  yield(); Serial.println(testText());
+  //total+=testText();
+  delay(3000);
+
+  yield(); Serial.print(F("Lines                    "));
+  yield(); Serial.println(testLines(CYAN));
+  //total+=testLines(CYAN);
+  delay(500);
+
+  yield(); Serial.print(F("Horiz/Vert Lines         "));
+  yield(); Serial.println(testFastLines(RED, BLUE));
+  //total+=testFastLines(RED, BLUE);
+  delay(500);
+
+  yield(); Serial.print(F("Rectangles (outline)     "));
+  yield(); Serial.println(testRects(GREEN));
+  //total+=testRects(GREEN);
+  delay(500);
+
+  yield(); Serial.print(F("Rectangles (filled)      "));
+  yield(); Serial.println(testFilledRects(YELLOW, MAGENTA));
+  //total+=testFilledRects(YELLOW, MAGENTA);
+  delay(500);
+
+  yield(); Serial.print(F("Circles (filled)         "));
+  yield(); Serial.println(testFilledCircles(10, MAGENTA));
+  //total+= testFilledCircles(10, MAGENTA);
+  delay(500);
+  
+  yield(); Serial.print(F("Circles (outline)        "));
+  yield(); Serial.println(testCircles(10, WHITE));
+  //total+=testCircles(10, WHITE);
+  delay(500);
+
+  yield(); Serial.print(F("Triangles (outline)      "));
+  yield(); Serial.println(testTriangles());
+  //total+=testTriangles();
+  delay(500);
+
+  yield(); Serial.print(F("Triangles (filled)       "));
+  yield(); Serial.println(testFilledTriangles());
+  //total += testFilledTriangles();
+  delay(500);
+
+  yield(); Serial.print(F("Rounded rects (outline)  "));
+  yield(); Serial.println(testRoundRects());
+  //total+=testRoundRects();
+  delay(500);
+
+  yield(); Serial.print(F("Rounded rects (filled)   "));
+  yield(); Serial.println(testFilledRoundRects());
+  //total+=testFilledRoundRects();
+  delay(500);
+
+  yield(); Serial.println(F("Done!")); yield();
+  //Serial.print(F("Total = ")); Serial.println(total);
+  
+  //yield();Serial.println(millis()-tn);
+  for (uint8_t rotation = 0; rotation < 4; rotation++) {
     BF52.Lcd.setRotation(rotation);
     Serial.printf("rotation:%d\r\n", rotation);
     testText();
