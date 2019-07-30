@@ -1,0 +1,21 @@
+{
+  "name": "Bluefruit52_Arduino",
+  "version": "0.9.3",
+  "keywords": "tft, nRF52, display, nRF52832, Bluefruit52, BLE, ST7789, BMI160",
+  "description": "Arduino library for nRF52-based Bluefruit52 LE modules",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/Afantor/Bluefruit52_Arduino"
+  },
+  "authors":
+  [
+    {
+        "name": "Afantor",
+        "email": "afantor.go@gmail.com",
+        "maintainer": true
+    }
+  ],
+  "frameworks": "arduino",
+  "platforms": "nrf52"
+}
