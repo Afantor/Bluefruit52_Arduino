@@ -18,7 +18,7 @@ PCA9685 pwm = PCA9685();
 //PCA9685 pwm = PCA9685(&Wire, 0x40);
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   Serial.println("GPIO test!");
 
   pwm.begin();

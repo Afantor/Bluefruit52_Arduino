@@ -34,12 +34,12 @@ BLEClientUart clientUart;
 void setup()
 {
   BF52.begin(true, true, false);
-
+  pinMode(LED_1, OUTPUT);
   BF52.Lcd.fillScreen(BLACK);
-  BF52.Lcd.setTextColor(BLUE); // Set pixel color; 1 on the monochrome screen
-  BF52.Lcd.setTextSize(3);
-  BF52.Lcd.setCursor(60,50); 
-  BF52.Lcd.println("Slave 2");
+  BF52.Lcd.setTextColor(YELLOW); // Set pixel color; 1 on the monochrome screen
+  BF52.Lcd.setTextSize(5);
+  BF52.Lcd.setCursor(30,40); 
+  BF52.Lcd.println("Slave 1");
 
   Serial.println("Bluefruit52 Dual Role BLEUART Example");
   Serial.println("-------------------------------------\n");
@@ -154,8 +154,19 @@ void prph_bleuart_rx_callback(uint16_t conn_handle)
   bleuart.read(str, 20);
 
   Serial.print("[Prph] RX: ");
-  Serial.println(str);  
+  Serial.println(str);
 
+  Serial.println(str[0],HEX);
+  if(str[0]==0x31){
+    digitalToggle(LED_1);
+    BF52.Lcd.drawNumber(100, 80, 1, 1, RED, BLACK, 4);
+  }else if(str[0]==0x32){
+    digitalToggle(LED_1);
+    BF52.Lcd.drawNumber(100, 80, 2, 1, RED, BLACK, 4);
+  }else
+  {
+    BF52.Lcd.drawNumber(100, 80, 0, 1, RED, BLACK, 4);
+  }
   if ( clientUart.discovered() )
   {
     clientUart.print(str);
@@ -218,6 +229,16 @@ void cent_bleuart_rx_callback(BLEClientUart& cent_uart)
       
   Serial.print("[Cent] RX: ");
   Serial.println(str);
+  if(str[0]==0x31){
+    digitalToggle(LED_1);
+    BF52.Lcd.drawNumber(0, 80, 1, 1, BLUE, BLACK, 4);
+  }else if(str[0]==0x32){
+    digitalToggle(LED_1);
+    BF52.Lcd.drawNumber(0, 80, 2, 1, BLUE, BLACK, 4);
+  }else
+  {
+    BF52.Lcd.drawNumber(0, 80, 0, 1, BLUE, BLACK, 4);
+  }
 
   if ( bleuart.notifyEnabled() )
   {

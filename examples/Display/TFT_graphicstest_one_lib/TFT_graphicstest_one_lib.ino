@@ -21,9 +21,6 @@ void setup() {
 
   BF52.begin(true, true, false);
 
-  // Get a single ADC sample and throw it away
-  readVBAT();
-
   Serial.println(""); Serial.println("");
   Serial.println("eSPI library test!");
 

@@ -29,8 +29,8 @@ void setup()
 
   BF52.Lcd.fillScreen(BLACK);
   BF52.Lcd.setTextColor(RED); // Set pixel color; 1 on the monochrome screen
-  BF52.Lcd.setTextSize(3);
-  BF52.Lcd.setCursor(60,50); 
+  BF52.Lcd.setTextSize(5);
+  BF52.Lcd.setCursor(30,40); 
   BF52.Lcd.println("Master");
 
   Serial.println("Bluefruit52 Central BLEUART Example");
@@ -207,6 +207,13 @@ void loop()
         
         clientUart.print( str );
       }
+      if(Bluefruit52.BtnA.wasReleased())
+      {
+        clientUart.print(0x01);
+      }else if (Bluefruit52.BtnB.wasReleased()) {
+        clientUart.print(0x02);
+      }
     }
+    Bluefruit52.update();
   }
 }
